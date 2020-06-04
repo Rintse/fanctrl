@@ -4,9 +4,10 @@
 #include <iostream>
 #include <wiringPi.h>
 
-#define FAN_THRESH 45 // Fan enable threshold in degrees C
+#define FAN_THRESH 50 // Fan enable threshold in degrees C
+#define FAN_MARGIN 4 // Switching margin
 #define TEMPS_FILE "/sys/class/thermal/thermal_zone0/temp"
-#define OUT_PIN 3
+#define OUT_PIN 3 // GPIO22
 #define FAN_ON 1
 #define FAN_OFF 0
 
@@ -33,17 +34,14 @@ int main() {
 		// Temp file logs in millidegrees
 		uint32_t temp = strtol(result.c_str(), NULL, 10) / 1000;
 
-		std::cout << "Pin " << OUT_PIN << " now reading " << digitalRead(OUT_PIN) << std::endl;
-		if(temp > FAN_THRESH) {
+		if(temp > FAN_THRESH + FAN_MARGIN) {
 			digitalWrite(OUT_PIN, FAN_ON);
-			std::cout << "FAN ON" << std::endl;
 		}
-		else {
+		else if(temp < FAN_THRESH - FAN_MARGIN){
 			digitalWrite(OUT_PIN, FAN_OFF);
-			std::cout << "FAN OFF" << std::endl;
 		}
 		
-		std::this_thread::sleep_for (std::chrono::seconds(1));
+		std::this_thread::sleep_for(std::chrono::seconds(3));
 	}
 	return 0;
 }
